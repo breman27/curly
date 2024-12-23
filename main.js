@@ -1,25 +1,28 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs");
-const { exec } = require("child_process"); // If using curl
+const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
 
 function createWindow() {
+  // Note the webPreferences block with preload
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname, "renderer", "preload.js"), // optional if you want secure IPC
+      preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: false, // recommended for security
+      contextIsolation: true, // recommended for security
     },
   });
-  win.loadURL(`file://${path.join(__dirname, "renderer", "index.html")}`);
+
+  if (isDev) {
+    // Load from Vite dev server during development
+    win.loadURL("http://localhost:5173");
+  } else {
+    // Load from the `dist` folder in production
+    win.loadFile(path.join(__dirname, "dist", "index.html"));
+  }
 }
-
-app.whenReady().then(createWindow);
-
-// On macOS re-open window if closed
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
-});
 
 // Setup IPC handlers for requests
 ipcMain.handle("send-request", async (event, requestData) => {
@@ -52,3 +55,5 @@ ipcMain.handle("save-collections", (event, collections) => {
   fs.writeFileSync(dataPath, JSON.stringify({ collections }, null, 2), "utf8");
   return { success: true };
 });
+
+app.whenReady().then(createWindow);
