@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
+import RequestTab from "./RequestTab";
 
 function App() {
-  const [method, setMethod] = useState("GET");
-  const [url, setUrl] = useState("");
-  const [requestBody, setRequestBody] = useState("");
-  const [response, setResponse] = useState(null);
   const [collections, setCollections] = useState([]);
 
   // Load collections on mount
@@ -16,18 +13,6 @@ function App() {
     // Adjust this if your preload script exposes differently
     const data = await window.api.invoke("load-collections");
     setCollections(data.collections || []);
-  };
-
-  const loadCollectionDetail = (collection) => {
-    // Here you can set state related to selected collection if needed
-    // or trigger showing a particular request in the form fields
-    console.log("Loaded collection:", collection);
-  };
-
-  const sendRequest = async () => {
-    const requestData = { method, url, headers: {}, body: requestBody };
-    const res = await window.api.invoke("send-request", requestData);
-    setResponse(res);
   };
 
   const saveCollections = async () => {
@@ -56,7 +41,7 @@ function App() {
         <h2>Collections</h2>
         <ul>
           {collections.map((col, i) => (
-            <li key={i} onClick={() => loadCollectionDetail(col)}>
+            <li key={i} onClick={() => console.log("Loaded collection:", col)}>
               {col.name}
             </li>
           ))}
@@ -66,31 +51,7 @@ function App() {
 
       {/* Main Area */}
       <div className="main">
-        <div className="request-form">
-          <select value={method} onChange={(e) => setMethod(e.target.value)}>
-            <option>GET</option>
-            <option>POST</option>
-            <option>PUT</option>
-            <option>DELETE</option>
-          </select>
-          <input
-            type="text"
-            value={url}
-            placeholder="Enter URL"
-            onChange={(e) => setUrl(e.target.value)}
-          />
-          <textarea
-            value={requestBody}
-            placeholder="Enter request body"
-            onChange={(e) => setRequestBody(e.target.value)}
-            className="w-full"
-          ></textarea>
-          <button onClick={sendRequest}>Send</button>
-        </div>
-        <div className="response">
-          <h3>Response</h3>
-          <pre>{response ? JSON.stringify(response, null, 2) : ""}</pre>
-        </div>
+        <RequestTab />
       </div>
     </>
   );
